@@ -1,108 +1,131 @@
-export function clamp(value, minimum, maximum) {
-  return Math.min(maximum, Math.max(minimum, value));
-}
-
-export function clampInteger(value, minimum, maximum, fallback = minimum) {
-  const nextValue = Math.trunc(Number(value));
-
-  if (Number.isNaN(nextValue)) {
-    return fallback;
+(function () {
+  function clamp(value, minimum, maximum) {
+    return Math.min(maximum, Math.max(minimum, value));
   }
 
-  return clamp(nextValue, minimum, maximum);
-}
+  function clampInteger(value, minimum, maximum, fallback) {
+    const nextValue = Math.trunc(Number(value));
 
-export function copyMatrix(matrix) {
-  return matrix.map((row) => row.slice());
-}
+    if (Number.isNaN(nextValue)) {
+      return fallback === undefined ? minimum : fallback;
+    }
 
-export function unique(values) {
-  return Array.from(new Set(values));
-}
-
-export function range(count) {
-  return Array.from({ length: count }, (_, index) => index);
-}
-
-export function shuffle(values) {
-  const copy = values.slice();
-
-  for (let index = copy.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+    return clamp(nextValue, minimum, maximum);
   }
 
-  return copy;
-}
+  function copyMatrix(matrix) {
+    return matrix.map((row) => row.slice());
+  }
 
-export function createId(prefix = "id") {
-  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
-}
+  function unique(values) {
+    return Array.from(new Set(values));
+  }
 
-export function now() {
-  return globalThis.performance?.now() ?? Date.now();
-}
+  function range(count) {
+    return Array.from({ length: count }, function (_, index) {
+      return index;
+    });
+  }
 
-export function nextFrame() {
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => resolve());
-  });
-}
+  function shuffle(values) {
+    const copy = values.slice();
 
-export function measureOperation(task) {
-  const firstStart = now();
-  let result = task();
-  const firstElapsed = now() - firstStart;
+    for (let index = copy.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      const current = copy[index];
+      copy[index] = copy[swapIndex];
+      copy[swapIndex] = current;
+    }
 
-  if (firstElapsed >= 1) {
+    return copy;
+  }
+
+  function createId(prefix) {
+    return `${prefix || "id"}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  function now() {
+    return globalThis.performance?.now() ?? Date.now();
+  }
+
+  function nextFrame() {
+    return new Promise(function (resolve) {
+      requestAnimationFrame(function () {
+        resolve();
+      });
+    });
+  }
+
+  function measureOperation(task) {
+    const firstStart = now();
+    let result = task();
+    const firstElapsed = now() - firstStart;
+
+    if (firstElapsed >= 1) {
+      return {
+        result,
+        runtimeMs: firstElapsed,
+      };
+    }
+
+    let iterations = 1;
+    let totalElapsed = firstElapsed;
+
+    while (totalElapsed < 12 && iterations < 256) {
+      const nextIterations = Math.min(iterations * 2, 256);
+      const start = now();
+
+      for (let index = 0; index < nextIterations; index += 1) {
+        result = task();
+      }
+
+      totalElapsed = now() - start;
+      iterations = nextIterations;
+    }
+
     return {
       result,
-      runtimeMs: firstElapsed,
+      runtimeMs: totalElapsed / iterations,
     };
   }
 
-  let iterations = 1;
-  let totalElapsed = firstElapsed;
-
-  while (totalElapsed < 12 && iterations < 256) {
-    const nextIterations = Math.min(iterations * 2, 256);
-    const start = now();
-
-    for (let index = 0; index < nextIterations; index += 1) {
-      result = task();
+  function formatMs(value) {
+    if (value === null || value === undefined) {
+      return "-";
     }
 
-    totalElapsed = now() - start;
-    iterations = nextIterations;
+    if (value < 1) {
+      return `${value.toFixed(3)} ms`;
+    }
+
+    if (value < 100) {
+      return `${value.toFixed(2)} ms`;
+    }
+
+    return `${value.toFixed(1)} ms`;
   }
 
-  return {
-    result,
-    runtimeMs: totalElapsed / iterations,
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  window.SATifyCommon = {
+    clamp,
+    clampInteger,
+    copyMatrix,
+    unique,
+    range,
+    shuffle,
+    createId,
+    now,
+    nextFrame,
+    measureOperation,
+    formatMs,
+    escapeHtml,
   };
-}
-
-export function formatMs(value) {
-  if (value === null || value === undefined) {
-    return "-";
-  }
-
-  if (value < 1) {
-    return `${value.toFixed(3)} ms`;
-  }
-
-  if (value < 100) {
-    return `${value.toFixed(2)} ms`;
-  }
-
-  return `${value.toFixed(1)} ms`;
-}
-
-export function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+})();

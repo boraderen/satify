@@ -1,6 +1,6 @@
 # SATify
 
-SATify is now a plain HTML, CSS, and JavaScript project for experimenting with reductions to SAT and 3-SAT.
+SATify is a plain HTML, CSS, and JavaScript project for experimenting with reductions to SAT and 3-SAT.
 
 Supported problems:
 
@@ -10,30 +10,26 @@ Supported problems:
 - SAT
 - 3-SAT
 
+## Open locally
+
+No server or build step is required.
+
+Open [index.html](/Users/bd/Projects/satify/index.html) directly in a browser, or open any problem page inside [problems](/Users/bd/Projects/satify/problems).
+
+Examples:
+
+- [index.html](/Users/bd/Projects/satify/index.html)
+- [problems/k-clique/index.html](/Users/bd/Projects/satify/problems/k-clique/index.html)
+- [problems/sat/index.html](/Users/bd/Projects/satify/problems/sat/index.html)
+
 ## Project layout
 
-- `index.html` renders the home page.
-- `problems/*/index.html` renders the individual workbenches.
-- `src/js/` contains the application logic, reductions, solvers, and rendering code.
-- `src/styles/site.css` contains the shared old-school UI styling.
-- `scripts/build.mjs` copies the static site into `out/`.
-- `scripts/dev.mjs` serves either the source tree or `out/`.
-
-## Local development
-
-```bash
-npm run dev
-```
-
-Then open [http://localhost:4173](http://localhost:4173).
-
-## Checks
-
-```bash
-npm run lint
-npm run build
-```
+- `index.html` is the home page.
+- `problems/*/index.html` are the problem workbenches.
+- `src/js/` contains the logic, rendering, and interactions.
+- `src/styles/site.css` contains the shared styling.
+- `assets/satify.png` is the site icon.
 
 ## Deployment
 
-GitHub Pages still deploys from the workflow in `.github/workflows/deploy-pages.yml`, and the generated static site is published from `out/`.
+This repository is a static site. It can be deployed directly to any static host without a build step.

@@ -1,113 +1,124 @@
-import { clamp, clampInteger, measureOperation, nextFrame, now } from "./common.js";
-import {
-  MAX_GRAPH_NODES,
-  GRAPH_VIEWBOX,
-  addGraphNode,
-  autoLayoutGraph,
-  cloneGraph,
-  createSampleCliqueGraph,
-  createSampleIndependentSetGraph,
-  createSampleVertexCoverGraph,
-  decodeCliqueAssignment,
-  generateRandomCliqueGraph,
-  generateRandomIndependentSetGraph,
-  generateRandomVertexCoverGraph,
-  reduceCliqueToSat,
-  reduceIndependentSetToClique,
-  reduceVertexCoverToClique,
-  setGraphTarget,
-  solveCliqueBruteForce,
-  solveIndependentSetBruteForce,
-  solveVertexCoverBruteForce,
-  toggleGraphEdge,
-  updateGraphNodePosition,
-  complementIndices,
-} from "./graph-logic.js";
-import { renderProblemPage } from "./render.js";
-import { PAGE_COPY } from "./site-data.js";
-import {
-  FORMULA_LIMITS,
-  buildFormulaFromDraft,
-  buildVariableNames,
-  convertToThreeSat,
-  createDefaultDraftClause,
-  createDraftClauses,
-  createSampleFormula,
-  formatAssignmentPreview,
-  generateRandomFormula,
-  normalizeDraftClauses,
-  projectAssignment,
-  solveSat,
-  solveSatBruteForce,
-} from "./sat-logic.js";
+(function () {
+  const { clamp, clampInteger, measureOperation, nextFrame, now } = window.SATifyCommon;
+  const {
+    MAX_GRAPH_NODES,
+    GRAPH_VIEWBOX,
+    addGraphNode,
+    autoLayoutGraph,
+    cloneGraph,
+    createSampleCliqueGraph,
+    createSampleIndependentSetGraph,
+    createSampleVertexCoverGraph,
+    decodeCliqueAssignment,
+    generateRandomCliqueGraph,
+    generateRandomIndependentSetGraph,
+    generateRandomVertexCoverGraph,
+    reduceCliqueToSat,
+    reduceIndependentSetToClique,
+    reduceVertexCoverToClique,
+    setGraphTarget,
+    solveCliqueBruteForce,
+    solveIndependentSetBruteForce,
+    solveVertexCoverBruteForce,
+    toggleGraphEdge,
+    updateGraphNodePosition,
+    complementIndices,
+  } = window.SATifyGraph;
+  const { renderProblemPage } = window.SATifyRender;
+  const { PAGE_COPY } = window.SATifyData;
+  const {
+    FORMULA_LIMITS,
+    buildFormulaFromDraft,
+    buildVariableNames,
+    convertToThreeSat,
+    createDefaultDraftClause,
+    createDraftClauses,
+    createSampleFormula,
+    formatAssignmentPreview,
+    generateRandomFormula,
+    normalizeDraftClauses,
+    projectAssignment,
+    solveSat,
+    solveSatBruteForce,
+  } = window.SATifySat;
 
-const GRAPH_CONFIG = {
-  "k-clique": {
-    sample: createSampleCliqueGraph,
-    random: generateRandomCliqueGraph,
-    bruteForce: solveCliqueBruteForce,
-    toClique: (graph) => cloneGraph(graph),
-    fromCliqueSelection: (indices) => indices,
-    targetLabel: "Target clique size k",
-    recoveredLabel: "Recovered clique",
-    optimalLabel: "Maximum clique",
-    reductionLabel: "k-clique -> SAT -> 3-SAT",
-    randomMessage: (nodeCount, targetSize) =>
-      `Generated a random graph with ${nodeCount} vertices containing a clique of size at least ${targetSize}.`,
-    maxNodes: MAX_GRAPH_NODES,
-    targetMinimum: 1,
-  },
-  "independent-set": {
-    sample: createSampleIndependentSetGraph,
-    random: generateRandomIndependentSetGraph,
-    bruteForce: solveIndependentSetBruteForce,
-    toClique: reduceIndependentSetToClique,
-    fromCliqueSelection: (indices) => indices,
-    targetLabel: "Target independent set size k",
-    recoveredLabel: "Recovered independent set",
-    optimalLabel: "Maximum independent set",
-    reductionLabel: "independent set -> clique -> SAT -> 3-SAT",
-    randomMessage: (nodeCount, targetSize) =>
-      `Generated a random graph with ${nodeCount} vertices containing an independent set of size at least ${targetSize}.`,
-    maxNodes: MAX_GRAPH_NODES,
-    targetMinimum: 1,
-  },
-  "vertex-cover": {
-    sample: createSampleVertexCoverGraph,
-    random: generateRandomVertexCoverGraph,
-    bruteForce: solveVertexCoverBruteForce,
-    toClique: reduceVertexCoverToClique,
-    fromCliqueSelection: (indices, nodeCount) => complementIndices(nodeCount, indices),
-    targetLabel: "Target vertex cover size k",
-    recoveredLabel: "Recovered vertex cover",
-    optimalLabel: "Minimum vertex cover",
-    reductionLabel: "vertex cover -> independent set -> clique -> SAT -> 3-SAT",
-    randomMessage: (nodeCount, targetSize) =>
-      `Generated a random graph with ${nodeCount} vertices admitting a vertex cover of size at most ${targetSize}.`,
-    maxNodes: MAX_GRAPH_NODES,
-    targetMinimum: 0,
-  },
-};
+  const GRAPH_CONFIG = {
+    "k-clique": {
+      sample: createSampleCliqueGraph,
+      random: generateRandomCliqueGraph,
+      bruteForce: solveCliqueBruteForce,
+      toClique: function (graph) {
+        return cloneGraph(graph);
+      },
+      fromCliqueSelection: function (indices) {
+        return indices;
+      },
+      targetLabel: "Target clique size k",
+      recoveredLabel: "Recovered clique",
+      optimalLabel: "Maximum clique",
+      reductionLabel: "k-clique -> SAT -> 3-SAT",
+      randomMessage: function (nodeCount, targetSize) {
+        return `Generated a random graph with ${nodeCount} vertices containing a clique of size at least ${targetSize}.`;
+      },
+      maxNodes: MAX_GRAPH_NODES,
+      targetMinimum: 1,
+    },
+    "independent-set": {
+      sample: createSampleIndependentSetGraph,
+      random: generateRandomIndependentSetGraph,
+      bruteForce: solveIndependentSetBruteForce,
+      toClique: reduceIndependentSetToClique,
+      fromCliqueSelection: function (indices) {
+        return indices;
+      },
+      targetLabel: "Target independent set size k",
+      recoveredLabel: "Recovered independent set",
+      optimalLabel: "Maximum independent set",
+      reductionLabel: "independent set -> clique -> SAT -> 3-SAT",
+      randomMessage: function (nodeCount, targetSize) {
+        return `Generated a random graph with ${nodeCount} vertices containing an independent set of size at least ${targetSize}.`;
+      },
+      maxNodes: MAX_GRAPH_NODES,
+      targetMinimum: 1,
+    },
+    "vertex-cover": {
+      sample: createSampleVertexCoverGraph,
+      random: generateRandomVertexCoverGraph,
+      bruteForce: solveVertexCoverBruteForce,
+      toClique: reduceVertexCoverToClique,
+      fromCliqueSelection: function (indices, nodeCount) {
+        return complementIndices(nodeCount, indices);
+      },
+      targetLabel: "Target vertex cover size k",
+      recoveredLabel: "Recovered vertex cover",
+      optimalLabel: "Minimum vertex cover",
+      reductionLabel: "vertex cover -> independent set -> clique -> SAT -> 3-SAT",
+      randomMessage: function (nodeCount, targetSize) {
+        return `Generated a random graph with ${nodeCount} vertices admitting a vertex cover of size at most ${targetSize}.`;
+      },
+      maxNodes: MAX_GRAPH_NODES,
+      targetMinimum: 0,
+    },
+  };
 
-const FORMULA_CONFIG = {
-  sat: {
-    mode: "sat",
-    maxVariables: FORMULA_LIMITS.maxVariables,
-    maxClauses: FORMULA_LIMITS.maxClauses,
-    maxClauseLength: FORMULA_LIMITS.maxClauseLength,
-    reductionLabel: "SAT -> 3-SAT",
-  },
-  "3-sat": {
-    mode: "3sat",
-    maxVariables: FORMULA_LIMITS.maxVariables,
-    maxClauses: FORMULA_LIMITS.maxClauses,
-    maxClauseLength: 3,
-    reductionLabel: "3-SAT -> 3-SAT",
-  },
-};
+  const FORMULA_CONFIG = {
+    sat: {
+      mode: "sat",
+      maxVariables: FORMULA_LIMITS.maxVariables,
+      maxClauses: FORMULA_LIMITS.maxClauses,
+      maxClauseLength: FORMULA_LIMITS.maxClauseLength,
+      reductionLabel: "SAT -> 3-SAT",
+    },
+    "3-sat": {
+      mode: "3sat",
+      maxVariables: FORMULA_LIMITS.maxVariables,
+      maxClauses: FORMULA_LIMITS.maxClauses,
+      maxClauseLength: 3,
+      reductionLabel: "3-SAT -> 3-SAT",
+    },
+  };
 
-export class ProblemController {
-  constructor(root, rootPath, pageKey) {
+  function ProblemController(root, rootPath, pageKey) {
     this.root = root;
     this.rootPath = rootPath;
     this.pageKey = pageKey;
@@ -140,7 +151,7 @@ export class ProblemController {
     this.render();
   }
 
-  createGraphState(pageKey) {
+  ProblemController.prototype.createGraphState = function (pageKey) {
     const config = GRAPH_CONFIG[pageKey];
     const graph = config.sample();
 
@@ -160,9 +171,9 @@ export class ProblemController {
       bruteForceRun: null,
       satRun: null,
     };
-  }
+  };
 
-  createFormulaState(pageKey) {
+  ProblemController.prototype.createFormulaState = function (pageKey) {
     const config = FORMULA_CONFIG[pageKey];
     const sampleFormula = createSampleFormula(config.mode);
 
@@ -184,17 +195,17 @@ export class ProblemController {
       bruteForceRun: null,
       satRun: null,
     };
-  }
+  };
 
-  render() {
+  ProblemController.prototype.render = function () {
     this.root.innerHTML = renderProblemPage({
       rootPath: this.rootPath,
       state: this.state,
       copy: this.copy,
     });
-  }
+  };
 
-  clearComputed(message) {
+  ProblemController.prototype.clearComputed = function (message) {
     this.state.reductionRun = null;
     this.state.bruteForceRun = null;
     this.state.satRun = null;
@@ -202,21 +213,21 @@ export class ProblemController {
     if (message) {
       this.state.status = message;
     }
-  }
+  };
 
-  setGraph(nextGraph, message) {
+  ProblemController.prototype.setGraph = function (nextGraph, message) {
     this.state.graph = nextGraph;
     this.clearComputed(message);
-  }
+  };
 
-  setFormula(nextVariableCount, nextDraftClauses, message) {
+  ProblemController.prototype.setFormula = function (nextVariableCount, nextDraftClauses, message) {
     this.state.variableCount = nextVariableCount;
     this.state.variableNames = buildVariableNames(nextVariableCount);
     this.state.draftClauses = nextDraftClauses;
     this.clearComputed(message);
-  }
+  };
 
-  buildGraphReduction() {
+  ProblemController.prototype.buildGraphReduction = function () {
     const cliqueGraph = this.state.config.toClique(this.state.graph);
     const satStart = now();
     const satReduction = reduceCliqueToSat(cliqueGraph);
@@ -232,13 +243,13 @@ export class ProblemController {
       threeSatMs: threeSatEnd - satEnd,
       totalMs: threeSatEnd - satStart,
     };
-  }
+  };
 
-  buildCurrentFormula() {
+  ProblemController.prototype.buildCurrentFormula = function () {
     return buildFormulaFromDraft(this.state.variableCount, this.state.draftClauses);
-  }
+  };
 
-  buildFormulaReduction(formula) {
+  ProblemController.prototype.buildFormulaReduction = function (formula) {
     const start = now();
     const threeSat = convertToThreeSat(formula);
     const end = now();
@@ -248,9 +259,9 @@ export class ProblemController {
       threeSat,
       totalMs: end - start,
     };
-  }
+  };
 
-  async runBusyAction(action, status, callback) {
+  ProblemController.prototype.runBusyAction = async function (action, status, callback) {
     if (this.state.busyAction) {
       return;
     }
@@ -261,7 +272,7 @@ export class ProblemController {
     await nextFrame();
 
     try {
-      callback();
+      callback.call(this);
     } catch (error) {
       console.error(error);
       this.state.status = error instanceof Error ? error.message : "Something went wrong.";
@@ -269,16 +280,16 @@ export class ProblemController {
       this.state.busyAction = null;
       this.render();
     }
-  }
+  };
 
-  handleClick(event) {
+  ProblemController.prototype.handleClick = function (event) {
     const actionTarget = event.target.closest("[data-action]");
 
     if (!actionTarget || this.state.busyAction) {
       return;
     }
 
-    const { action } = actionTarget.dataset;
+    const action = actionTarget.dataset.action;
 
     switch (action) {
       case "graph-add-node":
@@ -338,16 +349,16 @@ export class ProblemController {
       default:
         break;
     }
-  }
+  };
 
-  handleChange(event) {
+  ProblemController.prototype.handleChange = function (event) {
     const actionTarget = event.target.closest("[data-action]");
 
     if (!actionTarget || this.state.busyAction) {
       return;
     }
 
-    const { action } = actionTarget.dataset;
+    const action = actionTarget.dataset.action;
 
     switch (action) {
       case "graph-target":
@@ -414,9 +425,9 @@ export class ProblemController {
       default:
         break;
     }
-  }
+  };
 
-  handleInput(event) {
+  ProblemController.prototype.handleInput = function (event) {
     const actionTarget = event.target.closest("[data-action]");
 
     if (!actionTarget || this.state.busyAction) {
@@ -427,9 +438,9 @@ export class ProblemController {
       this.state.random.density = clamp(Number(actionTarget.value), 0.15, 0.95);
       this.render();
     }
-  }
+  };
 
-  handlePointerDown(event) {
+  ProblemController.prototype.handlePointerDown = function (event) {
     if (this.state.kind !== "graph" || this.state.busyAction) {
       return;
     }
@@ -445,9 +456,9 @@ export class ProblemController {
     };
 
     event.preventDefault();
-  }
+  };
 
-  handlePointerMove(event) {
+  ProblemController.prototype.handlePointerMove = function (event) {
     if (!this.dragState || this.state.kind !== "graph") {
       return;
     }
@@ -464,9 +475,9 @@ export class ProblemController {
 
     this.state.graph = updateGraphNodePosition(this.state.graph, this.dragState.nodeId, x, y);
     this.updateGraphCanvas();
-  }
+  };
 
-  handlePointerUp() {
+  ProblemController.prototype.handlePointerUp = function () {
     if (!this.dragState || this.state.kind !== "graph") {
       return;
     }
@@ -479,9 +490,9 @@ export class ProblemController {
         : "Moved a vertex.",
     );
     this.render();
-  }
+  };
 
-  updateGraphCanvas() {
+  ProblemController.prototype.updateGraphCanvas = function () {
     const graph = this.state.graph;
     const svg = this.root.querySelector("[data-graph-canvas]");
 
@@ -489,7 +500,7 @@ export class ProblemController {
       return;
     }
 
-    graph.nodes.forEach((node) => {
+    graph.nodes.forEach(function (node) {
       const group = svg.querySelector(`[data-node-id="${node.id}"]`);
 
       if (group) {
@@ -497,7 +508,7 @@ export class ProblemController {
       }
     });
 
-    svg.querySelectorAll("[data-edge-from]").forEach((line) => {
+    svg.querySelectorAll("[data-edge-from]").forEach(function (line) {
       const fromIndex = Number(line.getAttribute("data-edge-from"));
       const toIndex = Number(line.getAttribute("data-edge-to"));
       const from = graph.nodes[fromIndex];
@@ -512,9 +523,9 @@ export class ProblemController {
       line.setAttribute("x2", String(to.x));
       line.setAttribute("y2", String(to.y));
     });
-  }
+  };
 
-  handleAddGraphNode() {
+  ProblemController.prototype.handleAddGraphNode = function () {
     if (this.state.graph.nodes.length >= this.state.config.maxNodes) {
       this.state.status = `The interactive demo is capped at ${this.state.config.maxNodes} vertices.`;
       this.render();
@@ -526,28 +537,28 @@ export class ProblemController {
     this.state.random.targetSize = Math.min(this.state.random.targetSize, nextGraph.nodes.length);
     this.setGraph(nextGraph, `Added vertex ${nextGraph.nodes[nextGraph.nodes.length - 1].label}.`);
     this.render();
-  }
+  };
 
-  handleAutoLayout() {
+  ProblemController.prototype.handleAutoLayout = function () {
     this.setGraph(autoLayoutGraph(this.state.graph), "Applied a circular layout to the current graph.");
     this.render();
-  }
+  };
 
-  handleGraphTargetChange(value) {
+  ProblemController.prototype.handleGraphTargetChange = function (value) {
     const minimum = this.state.config.targetMinimum;
     this.setGraph(
       setGraphTarget(this.state.graph, value, minimum),
       `Updated the target to ${clampInteger(value, minimum, this.state.graph.nodes.length, this.state.graph.targetSize)}.`,
     );
     this.render();
-  }
+  };
 
-  handleToggleEdge(fromIndex, toIndex) {
+  ProblemController.prototype.handleToggleEdge = function (fromIndex, toIndex) {
     this.setGraph(toggleGraphEdge(this.state.graph, fromIndex, toIndex), "Updated the graph edges.");
     this.render();
-  }
+  };
 
-  handleGenerateRandomGraph() {
+  ProblemController.prototype.handleGenerateRandomGraph = function () {
     const nodeCount = clampInteger(this.state.random.nodeCount, 3, this.state.config.maxNodes, 5);
     const minimum = Math.max(1, this.state.config.targetMinimum);
     const targetSize = clampInteger(
@@ -562,17 +573,17 @@ export class ProblemController {
     this.state.random.targetSize = targetSize;
     this.setGraph(nextGraph, this.state.config.randomMessage(nodeCount, targetSize));
     this.render();
-  }
+  };
 
-  handleReduceGraph() {
-    this.runBusyAction("reduce", "Reducing the current graph problem to SAT and 3-SAT.", () => {
+  ProblemController.prototype.handleReduceGraph = function () {
+    this.runBusyAction("reduce", "Reducing the current graph problem to SAT and 3-SAT.", function () {
       this.state.reductionRun = this.buildGraphReduction();
       this.state.status = "Reduction completed. Inspect the transformed clauses below.";
     });
-  }
+  };
 
-  handleBruteGraph() {
-    this.runBusyAction("brute", "Searching the graph exhaustively for a witness.", () => {
+  ProblemController.prototype.handleBruteGraph = function () {
+    this.runBusyAction("brute", "Searching the graph exhaustively for a witness.", function () {
       const measurement = measureOperation(() => this.state.config.bruteForce(this.state.graph));
       this.state.bruteForceRun = {
         result: measurement.result,
@@ -580,13 +591,13 @@ export class ProblemController {
       };
       this.state.status = "Brute-force search finished.";
     });
-  }
+  };
 
-  handleSolveGraphViaSat() {
+  ProblemController.prototype.handleSolveGraphViaSat = function () {
     this.runBusyAction(
       "sat",
       "Running the reduction, solving the 3-SAT instance, and checking the result against brute force.",
-      () => {
+      function () {
         const reduction = this.buildGraphReduction();
         const solverStart = now();
         const satResult = solveSat(reduction.threeSat);
@@ -622,9 +633,9 @@ export class ProblemController {
         this.state.status = "3-SAT solving completed.";
       },
     );
-  }
+  };
 
-  handleVariableCountChange(value) {
+  ProblemController.prototype.handleVariableCountChange = function (value) {
     const nextVariableCount = clampInteger(
       value,
       1,
@@ -640,9 +651,9 @@ export class ProblemController {
 
     this.setFormula(nextVariableCount, nextDraftClauses, `Using ${nextVariableCount} variables in the current formula.`);
     this.render();
-  }
+  };
 
-  handleAddClause() {
+  ProblemController.prototype.handleAddClause = function () {
     if (this.state.draftClauses.length >= this.state.config.maxClauses) {
       this.state.status = `This demo stays responsive up to ${this.state.config.maxClauses} clauses.`;
       this.render();
@@ -657,64 +668,70 @@ export class ProblemController {
       "Added a new clause.",
     );
     this.render();
-  }
+  };
 
-  handleRemoveClause(clauseId) {
+  ProblemController.prototype.handleRemoveClause = function (clauseId) {
     if (!clauseId || this.state.draftClauses.length <= 1) {
       return;
     }
 
     this.setFormula(
       this.state.variableCount,
-      this.state.draftClauses.filter((clause) => clause.id !== clauseId),
+      this.state.draftClauses.filter(function (clause) {
+        return clause.id !== clauseId;
+      }),
       "Removed a clause.",
     );
     this.render();
-  }
+  };
 
-  updateDraftClause(clauseId, literalIndex, updater, message = "Updated the formula.") {
+  ProblemController.prototype.updateDraftClause = function (clauseId, literalIndex, updater, message) {
     this.setFormula(
       this.state.variableCount,
-      this.state.draftClauses.map((clause) =>
-        clause.id === clauseId
+      this.state.draftClauses.map(function (clause) {
+        return clause.id === clauseId
           ? {
               ...clause,
-              literals: clause.literals.map((literal, index) =>
-                index === literalIndex ? updater(literal) : literal,
-              ),
+              literals: clause.literals.map(function (literal, index) {
+                return index === literalIndex ? updater(literal) : literal;
+              }),
             }
-          : clause,
-      ),
-      message,
+          : clause;
+      }),
+      message || "Updated the formula.",
     );
     this.render();
-  }
+  };
 
-  handleToggleLiteralNegation(clauseId, literalIndex) {
+  ProblemController.prototype.handleToggleLiteralNegation = function (clauseId, literalIndex) {
     this.updateDraftClause(
       clauseId,
       literalIndex,
-      (literal) => ({
-        ...literal,
-        negated: !literal.negated,
-      }),
+      function (literal) {
+        return {
+          ...literal,
+          negated: !literal.negated,
+        };
+      },
       "Toggled a literal.",
     );
-  }
+  };
 
-  handleSelectLiteralVariable(clauseId, literalIndex, variable) {
+  ProblemController.prototype.handleSelectLiteralVariable = function (clauseId, literalIndex, variable) {
     this.updateDraftClause(
       clauseId,
       literalIndex,
-      (literal) => ({
-        ...literal,
-        variable,
-      }),
+      function (literal) {
+        return {
+          ...literal,
+          variable,
+        };
+      },
       "Changed a literal variable.",
     );
-  }
+  };
 
-  handleAddLiteral(clauseId) {
+  ProblemController.prototype.handleAddLiteral = function (clauseId) {
     this.setFormula(
       this.state.variableCount,
       this.state.draftClauses.map((clause) =>
@@ -735,28 +752,30 @@ export class ProblemController {
       "Added a literal.",
     );
     this.render();
-  }
+  };
 
-  handleRemoveLiteral(clauseId, literalIndex) {
+  ProblemController.prototype.handleRemoveLiteral = function (clauseId, literalIndex) {
     this.setFormula(
       this.state.variableCount,
-      this.state.draftClauses.map((clause) =>
-        clause.id === clauseId
+      this.state.draftClauses.map(function (clause) {
+        return clause.id === clauseId
           ? {
               ...clause,
               literals:
                 clause.literals.length <= 1
                   ? clause.literals
-                  : clause.literals.filter((_, index) => index !== literalIndex),
+                  : clause.literals.filter(function (_, index) {
+                      return index !== literalIndex;
+                    }),
             }
-          : clause,
-      ),
+          : clause;
+      }),
       "Removed a literal.",
     );
     this.render();
-  }
+  };
 
-  handleGenerateRandomFormula() {
+  ProblemController.prototype.handleGenerateRandomFormula = function () {
     const nextVariableCount = clampInteger(
       this.state.random.variableCount,
       1,
@@ -778,21 +797,27 @@ export class ProblemController {
 
     this.state.random.variableCount = nextVariableCount;
     this.state.random.clauseCount = nextClauseCount;
-    this.setFormula(nextVariableCount, createDraftClauses(formula), `Generated a random satisfiable ${this.state.config.mode === "sat" ? "CNF" : "3-CNF"} formula.`);
+    this.setFormula(
+      nextVariableCount,
+      createDraftClauses(formula),
+      `Generated a random satisfiable ${this.state.config.mode === "sat" ? "CNF" : "3-CNF"} formula.`,
+    );
     this.render();
-  }
+  };
 
-  handleReduceFormula() {
-    this.runBusyAction("reduce", "Reducing the current formula to 3-SAT.", () => {
+  ProblemController.prototype.handleReduceFormula = function () {
+    this.runBusyAction("reduce", "Reducing the current formula to 3-SAT.", function () {
       this.state.reductionRun = this.buildFormulaReduction(this.buildCurrentFormula());
       this.state.status = "Reduction completed. Inspect the clause mapping below.";
     });
-  }
+  };
 
-  handleBruteFormula() {
-    this.runBusyAction("brute", "Checking the formula with exhaustive assignment search.", () => {
+  ProblemController.prototype.handleBruteFormula = function () {
+    this.runBusyAction("brute", "Checking the formula with exhaustive assignment search.", function () {
       const formula = this.buildCurrentFormula();
-      const measurement = measureOperation(() => solveSatBruteForce(formula));
+      const measurement = measureOperation(function () {
+        return solveSatBruteForce(formula);
+      });
       this.state.bruteForceRun = {
         ...measurement.result,
         assignment: projectAssignment(measurement.result.assignment, formula.variables),
@@ -800,19 +825,21 @@ export class ProblemController {
       };
       this.state.status = "Brute-force solving finished.";
     });
-  }
+  };
 
-  handleSolveFormulaViaSat() {
+  ProblemController.prototype.handleSolveFormulaViaSat = function () {
     this.runBusyAction(
       "sat",
       "Reducing the formula, solving the 3-SAT instance, and comparing with brute force.",
-      () => {
+      function () {
         const formula = this.buildCurrentFormula();
         const reduction = this.buildFormulaReduction(formula);
         const solverStart = now();
         const satResult = solveSat(reduction.threeSat);
         const solverEnd = now();
-        const bruteMeasurement = measureOperation(() => solveSatBruteForce(formula));
+        const bruteMeasurement = measureOperation(function () {
+          return solveSatBruteForce(formula);
+        });
         const bruteForce = {
           ...bruteMeasurement.result,
           assignment: projectAssignment(bruteMeasurement.result.assignment, formula.variables),
@@ -829,10 +856,15 @@ export class ProblemController {
           solverMs: solverEnd - solverStart,
           totalPipelineMs: reduction.totalMs + (solverEnd - solverStart),
           solutionsAgree: satResult.satisfiable === bruteForce.satisfiable,
-          summary: formatAssignmentPreview(projectAssignment(satResult.assignment, formula.variables), formula.variables),
+          summary: formatAssignmentPreview(
+            projectAssignment(satResult.assignment, formula.variables),
+            formula.variables,
+          ),
         };
         this.state.status = "3-SAT solving completed.";
       },
     );
-  }
-}
+  };
+
+  window.SATifyProblemController = ProblemController;
+})();
