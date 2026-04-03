@@ -69,11 +69,11 @@
   ];
 
   const LANDSCAPE_NODES = [
-    { id: "vertex-cover", label: "Vertex Cover", x: 84, y: 56 },
-    { id: "independent-set", label: "Independent Set", x: 244, y: 56 },
-    { id: "k-clique", label: "k-Clique", x: 404, y: 56 },
-    { id: "sat", label: "SAT", x: 564, y: 56 },
-    { id: "3-sat", label: "3-SAT", x: 684, y: 56 },
+    { id: "vertex-cover", label: "Vertex Cover", x: 84, y: 56, width: 96 },
+    { id: "independent-set", label: "Independent Set", x: 244, y: 56, width: 128 },
+    { id: "k-clique", label: "k-Clique", x: 404, y: 56, width: 92 },
+    { id: "sat", label: "SAT", x: 564, y: 56, width: 76 },
+    { id: "3-sat", label: "3-SAT", x: 684, y: 56, width: 84 },
   ];
 
   const LANDSCAPE_EDGES = [

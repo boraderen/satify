@@ -170,14 +170,15 @@
       const dx = to.x - from.x;
       const dy = to.y - from.y;
       const distance = Math.hypot(dx, dy) || 1;
-      const inset = 46;
+      const fromInset = (from.width || 84) / 2 + 4;
+      const toInset = (to.width || 84) / 2 + 4;
 
       return `
         <line
-          x1="${from.x + (dx / distance) * inset}"
-          y1="${from.y}"
-          x2="${to.x - (dx / distance) * inset}"
-          y2="${to.y}"
+          x1="${from.x + (dx / distance) * fromInset}"
+          y1="${from.y + (dy / distance) * fromInset}"
+          x2="${to.x - (dx / distance) * toInset}"
+          y2="${to.y - (dy / distance) * toInset}"
           class="landscape-edge"
           marker-end="url(#arrow-head)"
         ></line>
@@ -194,9 +195,10 @@
           </defs>
           ${LANDSCAPE_EDGES.map(edgeLine).join("")}
           ${LANDSCAPE_NODES.map(function (node) {
+            const width = node.width || 84;
             return `
               <g transform="translate(${node.x}, ${node.y})">
-                <rect x="-42" y="-16" width="84" height="32" rx="8" class="landscape-node"></rect>
+                <rect x="-${width / 2}" y="-16" width="${width}" height="32" rx="8" class="landscape-node"></rect>
                 <text text-anchor="middle" y="5" class="landscape-label">${escapeHtml(node.label)}</text>
               </g>
             `;
