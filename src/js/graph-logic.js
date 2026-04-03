@@ -7,7 +7,8 @@
     unique,
   } = window.SATifyCommon;
 
-  const MAX_GRAPH_NODES = 50;
+  const MAX_GRAPH_NODES = 1000;
+  const GRAPH_DISPLAY_LIMIT = 50;
   const GRAPH_VIEWBOX = {
     width: 560,
     height: 320,
@@ -665,6 +666,7 @@
 
   window.SATifyGraph = {
     MAX_GRAPH_NODES,
+    GRAPH_DISPLAY_LIMIT,
     GRAPH_VIEWBOX,
     CLAUSE_FAMILY_INFO,
     createCircularLayout,

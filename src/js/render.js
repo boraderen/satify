@@ -2,6 +2,7 @@
   const { escapeHtml, formatMs } = window.SATifyCommon;
   const {
     CLAUSE_FAMILY_INFO,
+    GRAPH_DISPLAY_LIMIT,
     buildNodeColorMap,
     describeNodeSelection,
     graphEdges,
@@ -109,7 +110,7 @@
 
   function renderResultCard(title, rows, note) {
     return `
-      <article class="result-card">
+      <section class="result-block">
         <h3>${escapeHtml(title)}</h3>
         <table class="mini-table">
           <tbody>
@@ -117,7 +118,7 @@
           </tbody>
         </table>
         ${note ? `<p class="result-note">${escapeHtml(note)}</p>` : ""}
-      </article>
+      </section>
     `;
   }
 
@@ -136,19 +137,19 @@
 
   function renderReductionSteps(copy) {
     return `
-      <div class="step-list">
+      <ol class="step-list-plain">
         ${copy.reductionSteps
-          .map(function (step) {
+          .map(function (step, index) {
             return `
-              <article class="step-card">
-                <h3>${escapeHtml(step.title)}</h3>
+              <li class="step-item">
+                <h3>${escapeHtml(step.title || `${index + 1}. Step`)}</h3>
                 <p>${escapeHtml(step.text)}</p>
                 <div class="equation-box">${escapeHtml(step.formula)}</div>
-              </article>
+              </li>
             `;
           })
           .join("")}
-      </div>
+      </ol>
     `;
   }
 
@@ -259,112 +260,122 @@
   function renderGraphEditor(state) {
     const graph = state.graph;
     const nodeColors = buildNodeColorMap(graph.nodes);
+    const showGraphDisplay = graph.nodes.length <= GRAPH_DISPLAY_LIMIT;
 
     return renderWindow(
       "Graph Editor",
       `
-        <div class="split-layout">
-          <div class="pane">
-            <div class="toolbar-row">
-              <button data-action="graph-auto-layout" ${state.busyAction ? "disabled" : ""}>Auto layout</button>
-              <button data-action="graph-add-node" ${state.busyAction || graph.nodes.length >= state.config.maxNodes ? "disabled" : ""}>Add vertex</button>
-            </div>
-            <div class="control-grid">
-              <label>
-                <span>Random vertices</span>
-                <input type="number" min="3" max="${state.config.maxNodes}" step="1" value="${state.random.nodeCount}" data-action="graph-random-node-count">
-              </label>
-              <label>
-                <span>Random k</span>
-                <input type="number" min="${state.config.targetMinimum}" max="${graph.nodes.length}" step="1" value="${state.random.targetSize}" data-action="graph-random-target">
-              </label>
-              <label class="range-field">
-                <span>Density</span>
-                <input type="range" min="0.15" max="0.95" step="0.05" value="${state.random.density}" data-action="graph-random-density">
-                <small>${Math.round(state.random.density * 100)}%</small>
-              </label>
-              <label>
-                <span>${escapeHtml(state.config.targetLabel)}</span>
-                <input type="number" min="${state.config.targetMinimum}" max="${graph.nodes.length}" step="1" value="${graph.targetSize}" data-action="graph-target">
-              </label>
-              <button data-action="graph-generate-random" ${state.busyAction ? "disabled" : ""}>Random instance</button>
-            </div>
-            <div class="graph-stage">
-              <svg viewBox="0 0 560 320" class="graph-canvas" data-graph-canvas aria-label="Interactive graph canvas">
-                ${graphEdges(graph)
-                  .map(function (edge) {
-                    return `
-                      <line
-                        data-edge-from="${edge.fromIndex}"
-                        data-edge-to="${edge.toIndex}"
-                        x1="${edge.from.x}"
-                        y1="${edge.from.y}"
-                        x2="${edge.to.x}"
-                        y2="${edge.to.y}"
-                        class="graph-edge"
-                      ></line>
-                    `;
-                  })
-                  .join("")}
-                ${graph.nodes
-                  .map(function (node) {
-                    return `
-                      <g class="graph-node" transform="translate(${node.x}, ${node.y})" data-node-id="${escapeHtml(node.id)}">
-                        <circle r="18" fill="${nodeColors[node.id]}" class="graph-node-circle"></circle>
-                        <text text-anchor="middle" dy="5" class="graph-node-label">${escapeHtml(node.label)}</text>
-                      </g>
-                    `;
-                  })
-                  .join("")}
-              </svg>
-            </div>
-            <p class="field-note">Drag vertices on the canvas. Edge toggles stay in the matrix on the right.</p>
-          </div>
-          <div class="pane">
-            <h3>Adjacency Matrix</h3>
-            <div class="matrix-wrap">
-              <table class="matrix-table">
-                <thead>
-                  <tr>
-                    <th></th>
-                    ${graph.nodes.map(function (node) { return `<th>${escapeHtml(node.label)}</th>`; }).join("")}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${graph.nodes
-                    .map(function (rowNode, rowIndex) {
-                      return `
-                        <tr>
-                          <th>${escapeHtml(rowNode.label)}</th>
-                          ${graph.nodes
-                            .map(function (columnNode, columnIndex) {
-                              if (rowIndex === columnIndex) {
-                                return '<td class="matrix-diagonal">-</td>';
-                              }
-
-                              return `
-                                <td>
-                                  <input
-                                    type="checkbox"
-                                    ${graph.adjacency[rowIndex][columnIndex] ? "checked" : ""}
-                                    data-action="toggle-edge"
-                                    data-from="${rowIndex}"
-                                    data-to="${columnIndex}"
-                                    aria-label="Toggle edge ${escapeHtml(rowNode.label)}-${escapeHtml(columnNode.label)}"
-                                  >
-                                </td>
-                              `;
-                            })
-                            .join("")}
-                        </tr>
-                      `;
-                    })
-                    .join("")}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div class="toolbar-row">
+          <button data-action="graph-auto-layout" ${state.busyAction ? "disabled" : ""}>Auto layout</button>
+          <button data-action="graph-add-node" ${state.busyAction || graph.nodes.length >= state.config.maxNodes ? "disabled" : ""}>Add vertex</button>
         </div>
+        <div class="control-grid">
+          <label>
+            <span>Random vertices</span>
+            <input type="number" min="3" max="${state.config.maxNodes}" step="1" value="${state.random.nodeCount}" data-action="graph-random-node-count">
+          </label>
+          <label>
+            <span>Random k</span>
+            <input type="number" min="${state.config.targetMinimum}" max="${graph.nodes.length}" step="1" value="${state.random.targetSize}" data-action="graph-random-target">
+          </label>
+          <label class="range-field">
+            <span>Density</span>
+            <input type="range" min="0.15" max="0.95" step="0.05" value="${state.random.density}" data-action="graph-random-density">
+            <small>${Math.round(state.random.density * 100)}%</small>
+          </label>
+          <label>
+            <span>${escapeHtml(state.config.targetLabel)}</span>
+            <input type="number" min="${state.config.targetMinimum}" max="${graph.nodes.length}" step="1" value="${graph.targetSize}" data-action="graph-target">
+          </label>
+          <button class="button-compact" data-action="graph-generate-random" ${state.busyAction ? "disabled" : ""}>Random instance</button>
+        </div>
+        ${
+          showGraphDisplay
+            ? `
+              <div class="split-layout">
+                <div class="pane">
+                  <svg viewBox="0 0 560 320" class="graph-canvas" data-graph-canvas aria-label="Interactive graph canvas">
+                    ${graphEdges(graph)
+                      .map(function (edge) {
+                        return `
+                          <line
+                            data-edge-from="${edge.fromIndex}"
+                            data-edge-to="${edge.toIndex}"
+                            x1="${edge.from.x}"
+                            y1="${edge.from.y}"
+                            x2="${edge.to.x}"
+                            y2="${edge.to.y}"
+                            class="graph-edge"
+                          ></line>
+                        `;
+                      })
+                      .join("")}
+                    ${graph.nodes
+                      .map(function (node) {
+                        return `
+                          <g class="graph-node" transform="translate(${node.x}, ${node.y})" data-node-id="${escapeHtml(node.id)}">
+                            <circle r="18" fill="${nodeColors[node.id]}" class="graph-node-circle"></circle>
+                            <text text-anchor="middle" dy="5" class="graph-node-label">${escapeHtml(node.label)}</text>
+                          </g>
+                        `;
+                      })
+                      .join("")}
+                  </svg>
+                  <p class="field-note">Drag vertices on the canvas. Edge toggles stay in the matrix on the right.</p>
+                </div>
+                <div class="pane">
+                  <h3>Adjacency Matrix</h3>
+                  <div class="matrix-wrap">
+                    <table class="matrix-table">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          ${graph.nodes.map(function (node) { return `<th>${escapeHtml(node.label)}</th>`; }).join("")}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${graph.nodes
+                          .map(function (rowNode, rowIndex) {
+                            return `
+                              <tr>
+                                <th>${escapeHtml(rowNode.label)}</th>
+                                ${graph.nodes
+                                  .map(function (columnNode, columnIndex) {
+                                    if (rowIndex === columnIndex) {
+                                      return '<td class="matrix-diagonal">-</td>';
+                                    }
+
+                                    return `
+                                      <td>
+                                        <input
+                                          type="checkbox"
+                                          ${graph.adjacency[rowIndex][columnIndex] ? "checked" : ""}
+                                          data-action="toggle-edge"
+                                          data-from="${rowIndex}"
+                                          data-to="${columnIndex}"
+                                          aria-label="Toggle edge ${escapeHtml(rowNode.label)}-${escapeHtml(columnNode.label)}"
+                                        >
+                                      </td>
+                                    `;
+                                  })
+                                  .join("")}
+                              </tr>
+                            `;
+                          })
+                          .join("")}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            `
+            : `
+              <div class="graph-limit-note">
+                <p>This graph has ${graph.nodes.length} vertices.</p>
+                <p>The graph visualisation and adjacency matrix are hidden above ${GRAPH_DISPLAY_LIMIT} vertices. Random generation and solving are still available.</p>
+              </div>
+            `
+        }
       `,
     );
   }
@@ -402,7 +413,7 @@
                 </label>
               `
           }
-          <button data-action="formula-generate-random" ${state.busyAction ? "disabled" : ""}>Random instance</button>
+          <button class="button-compact" data-action="formula-generate-random" ${state.busyAction ? "disabled" : ""}>Random instance</button>
         </div>
         <div class="formula-editor">
           ${state.draftClauses
@@ -507,43 +518,43 @@
 
     if (pageKey === "independent-set") {
       return `
-        <div class="info-grid">
-          <article class="info-card">
+        <div class="detail-grid">
+          <section class="detail-block">
             <h3>Input</h3>
             <p>Independent Set on the current graph.</p>
             <div class="equation-box">(G, k)</div>
-          </article>
-          <article class="info-card">
+          </section>
+          <section class="detail-block">
             <h3>Complement graph</h3>
             <p>Every missing non-diagonal edge becomes an edge.</p>
             <div class="equation-box">(G-bar, k)</div>
-          </article>
-          <article class="info-card">
+          </section>
+          <section class="detail-block">
             <h3>Clique instance</h3>
             <p>The SAT reduction runs on a clique target of ${activeReduction.cliqueGraph.targetSize}.</p>
             <div class="equation-box">S independent in G iff S clique in G-bar</div>
-          </article>
+          </section>
         </div>
       `;
     }
 
     return `
-      <div class="info-grid">
-        <article class="info-card">
+      <div class="detail-grid">
+        <section class="detail-block">
           <h3>Input</h3>
           <p>Vertex Cover on the current graph.</p>
           <div class="equation-box">(G, k)</div>
-        </article>
-        <article class="info-card">
+        </section>
+        <section class="detail-block">
           <h3>Independent Set view</h3>
           <p>The intermediate target becomes |V| - k.</p>
           <div class="equation-box">(G, |V| - k)</div>
-        </article>
-        <article class="info-card">
+        </section>
+        <section class="detail-block">
           <h3>Clique instance</h3>
           <p>The final SAT reduction uses the complement graph with clique target ${activeReduction.cliqueGraph.targetSize}.</p>
           <div class="equation-box">C cover in G iff V \\ C clique in G-bar</div>
-        </article>
+        </section>
       </div>
     `;
   }
@@ -551,6 +562,18 @@
   function renderGraphVisualization(pageKey, graph, activeReduction) {
     if (!activeReduction) {
       return "";
+    }
+
+    if (graph.nodes.length > GRAPH_DISPLAY_LIMIT) {
+      return renderWindow(
+        "Reduction Visualisation",
+        `
+          <div class="graph-limit-note">
+            <p>This graph has ${graph.nodes.length} vertices.</p>
+            <p>Detailed reduction visualisation is hidden above ${GRAPH_DISPLAY_LIMIT} vertices to keep the page usable.</p>
+          </div>
+        `,
+      );
     }
 
     const nodeColors = buildNodeColorMap(graph.nodes);
@@ -561,11 +584,11 @@
         "Reduction Visualisation",
         `
           ${renderGraphTransformation(pageKey, activeReduction)}
-          <div class="legend-grid">
+          <div class="legend-list">
             ${graph.nodes
               .map(function (node) {
                 return `
-                  <article class="legend-card">
+                  <div class="legend-item">
                     <div class="legend-head">
                       <span class="legend-dot" style="background:${nodeColors[node.id]}"></span>
                       <strong>${escapeHtml(node.label)}</strong>
@@ -585,12 +608,12 @@
                         `
                         : '<p class="field-note">No clique slots are required for this boundary case.</p>'
                     }
-                  </article>
+                  </div>
                 `;
               })
               .join("")}
           </div>
-          <div class="info-grid">
+          <div class="detail-grid">
             ${Object.entries(CLAUSE_FAMILY_INFO)
               .map(function (entry) {
                 const family = entry[0];
@@ -602,7 +625,7 @@
                   .slice(0, 3);
 
                 return `
-                  <article class="info-card">
+                  <section class="detail-block">
                     <h3>${escapeHtml(info.title)}</h3>
                     <p>${escapeHtml(info.description)}</p>
                     ${
@@ -610,7 +633,7 @@
                         ? previewClauses
                             .map(function (clause) {
                               return `
-                                <div class="preview-box">
+                                <div class="preview-line">
                                   <div class="preview-text">${escapeHtml(clause.description)}</div>
                                   <div>${renderClause(clause)}</div>
                                 </div>
@@ -619,7 +642,7 @@
                             .join("")
                         : '<p class="field-note">No clauses from this family were needed.</p>'
                     }
-                  </article>
+                  </section>
                 `;
               })
               .join("")}
@@ -639,7 +662,7 @@
       ${renderWindow(
         "Reduction Visualisation",
         `
-          <div class="mapping-grid">
+          <div class="mapping-list">
             ${activeReduction.inputFormula.clauses
               .map(function (clause) {
                 const mappedClauses = activeReduction.threeSat.clauses.filter(function (candidate) {
@@ -647,7 +670,7 @@
                 });
 
                 return `
-                  <article class="mapping-card">
+                  <section class="mapping-block">
                     <h3>${escapeHtml(clause.id.toUpperCase())}</h3>
                     <div class="mapping-row">
                       <strong>Original</strong>
@@ -659,7 +682,7 @@
                         ${mappedClauses.map(renderClause).join('<span class="logic-join logic-join-strong">and</span>')}
                       </div>
                     </div>
-                  </article>
+                  </section>
                 `;
               })
               .join("")}
@@ -821,19 +844,19 @@
     return `
       <div class="page-shell">
         ${renderBrand(options.rootPath)}
-        ${renderWindow(
-          options.copy.title,
-          `
-            <div class="crumb-row">
-              <a href="${homeLink(options.rootPath)}">Home</a>
-              <span>/</span>
-              <span>${escapeHtml(options.state.pageKey)}</span>
-            </div>
-            <h1>${escapeHtml(options.copy.title)}</h1>
-            ${renderDefinition(options.copy)}
-          `,
-        )}
-        ${renderWindow(options.copy.sectionTitle, renderReductionSteps(options.copy))}
+        <section class="plain-section">
+          <div class="crumb-row">
+            <a href="${homeLink(options.rootPath)}">Home</a>
+            <span>/</span>
+            <span>${escapeHtml(options.state.pageKey)}</span>
+          </div>
+          <h1>${escapeHtml(options.copy.title)}</h1>
+          ${renderDefinition(options.copy)}
+        </section>
+        <section class="plain-section plain-section-copy">
+          <h2>${escapeHtml(options.copy.sectionTitle)}</h2>
+          ${renderReductionSteps(options.copy)}
+        </section>
         ${editor}
         ${renderControlStrip(options.state)}
         ${results}

@@ -137,6 +137,15 @@ input[type="range"] {
   padding: 1rem;
 }
 
+.plain-section {
+  margin-bottom: 18px;
+}
+
+.plain-section-copy {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
 .intro-block h1,
 .window-body h1 {
   margin: 0 0 10px;
@@ -183,17 +192,16 @@ input[type="range"] {
   border-radius: 8px;
 }
 
-.step-list {
-  display: grid;
-  gap: 12px;
+.step-list-plain {
+  margin: 0;
+  padding-left: 1.2rem;
 }
 
-.step-card,
-.clause-editor-card,
-.result-card,
-.info-card,
-.legend-card,
-.mapping-card {
+.step-item {
+  margin: 0 0 14px;
+}
+
+.clause-editor-card {
   padding: 12px;
   background: var(--panel-soft);
   border: 1px solid var(--border);
@@ -237,11 +245,12 @@ input[type="range"] {
   font-weight: 600;
 }
 
-.graph-stage {
-  padding: 10px;
-  background: var(--panel-soft);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+.button-compact {
+  justify-self: start;
+  align-self: end;
+  min-height: 1.9rem;
+  padding: 0.24rem 0.5rem;
+  font-size: 0.84rem;
 }
 
 .graph-canvas {
@@ -370,17 +379,18 @@ input[type="range"] {
 
 .status-line {
   margin: 0;
-  padding: 10px 12px;
   font-size: 0.93rem;
-  background: var(--panel-soft);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+}
+
+.graph-limit-note {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
 .results-grid,
-.info-grid,
-.legend-grid,
-.mapping-grid {
+.detail-grid,
+.legend-list,
+.mapping-list {
   display: grid;
   gap: 12px;
 }
@@ -389,10 +399,31 @@ input[type="range"] {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.info-grid,
-.legend-grid,
-.mapping-grid {
+.detail-grid,
+.legend-list,
+.mapping-list {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.result-block,
+.detail-block,
+.legend-item,
+.mapping-block {
+  min-width: 0;
+}
+
+.result-block h3,
+.detail-block h3,
+.legend-item h3,
+.mapping-block h3 {
+  margin: 0 0 8px;
+}
+
+.result-block,
+.detail-block,
+.legend-item,
+.mapping-block {
+  padding-top: 2px;
 }
 
 .mini-table th {
@@ -443,12 +474,10 @@ input[type="range"] {
   border-radius: 999px;
 }
 
-.preview-box {
+.preview-line {
   margin-top: 10px;
-  padding: 10px;
-  background: #fff;
-  border: 1px dashed var(--border-strong);
-  border-radius: 8px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
 }
 
 .mapping-row {
